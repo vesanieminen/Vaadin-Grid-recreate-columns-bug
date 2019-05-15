@@ -97,9 +97,6 @@ public class MainView extends VerticalLayout {
             select.getElement().addEventListener("click", e -> {}).addEventData("event.stopPropagation()");
             int index = i;
             select.addValueChangeListener(e -> {
-                GridSortOrderBuilder<Person> sortOrderBuilder = new GridSortOrderBuilder<>();
-                sortOrderBuilder.thenAsc(grid.getColumns().get(index));
-                grid.sort(sortOrderBuilder.build());
                 grid.redraw();
             });
             selects[i] = select;
