@@ -1,15 +1,22 @@
 package org.vaadin.vesa;
 
+import com.vaadin.flow.component.ClientCallable;
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridSortOrder;
 import com.vaadin.flow.component.grid.GridSortOrderBuilder;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.function.ValueProvider;
 import com.vaadin.flow.router.Route;
+import elemental.json.JsonArray;
+import elemental.json.JsonObject;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -73,16 +80,21 @@ public class MainView extends VerticalLayout {
         }
 
         void addColumnsToContainer() {
-            grid.removeAllColumns();
+            removeAllColumns();
             for (int i = 0; i < 5; ++i) {
                 String value = selects[i].getValue();
-                grid.addColumn(headerToValueProvider.get(value)).setSortable(true);
+                addColumn(headerToValueProvider.get(value));
                 headerRow.getCells().get(i).setComponent(headerGenerator.apply(i));
+                getElement().executeJavaScript("$0.$server.enableSorting();", getElement());
             }
         }
 
-    }
+        @ClientCallable
+        private void enableSorting() {
+            getColumns().forEach(column -> column.setSortable(true));
+        }
 
+    }
 
     public Function<Integer, Component> getHeaderGenerator() {
         return columnIndex -> selects[columnIndex];
@@ -97,10 +109,9 @@ public class MainView extends VerticalLayout {
             select.getElement().addEventListener("click", e -> {}).addEventData("event.stopPropagation()");
             int index = i;
             select.addValueChangeListener(e -> {
-                GridSortOrderBuilder<Person> sortOrderBuilder = new GridSortOrderBuilder<>();
-                sortOrderBuilder.thenAsc(grid.getColumns().get(index));
-                grid.sort(sortOrderBuilder.build());
+                grid.sort(null);
                 grid.redraw();
+                grid.getElement().executeJavaScript("$0.$server.enableSorting();", grid.getElement());
             });
             selects[i] = select;
 
